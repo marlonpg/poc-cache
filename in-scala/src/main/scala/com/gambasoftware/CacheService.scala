@@ -2,10 +2,9 @@ package com.gambasoftware
 
 import scala.collection.mutable
 
-class CacheService {
+class CacheService(private var ttl: Long = 13000L) {
   private val cache = mutable.Map[String, Any]()
   private val expirationTimes = mutable.Map[String, Long]()
-  private val ttl = 13000L
 
   def put(key: String, value: Any): Unit = {
     cache.put(key, value)
