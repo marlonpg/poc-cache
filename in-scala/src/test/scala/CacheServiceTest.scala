@@ -9,6 +9,7 @@ class CacheServiceTest extends AnyFlatSpec with Matchers {
     val cache = new CacheService()
     cache.put("test", hardCodedNumber)
     val result = cache.get("test")
+
     result.get shouldEqual hardCodedNumber
   }
 
@@ -17,6 +18,13 @@ class CacheServiceTest extends AnyFlatSpec with Matchers {
     val cache = new CacheService(10L)
     cache.put("test", hardCodedNumber)
     Thread.sleep(11)
+    val result = cache.get("test")
+
+    result shouldEqual None
+  }
+
+  "get invalid cache" should "return None for a value that is not present inside the cache" in {
+    val cache = new CacheService(10L)
     val result = cache.get("test")
 
     result shouldEqual None
