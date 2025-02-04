@@ -3,25 +3,41 @@ package com.gambasoftware
 import akka.actor.typed.ActorSystem
 import akka.actor.typed.scaladsl.Behaviors
 import akka.http.scaladsl.Http
-import akka.http.scaladsl.model._
+import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
+import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
+import spray.json._
 
-object Server {
+final case class CacheEntry(key: String, value: String)
+
+final case class ResponseMessage(message: String)
+
+// Define JSON formatters
+trait JsonSupport extends DefaultJsonProtocol {
+  implicit val cacheEntryFormat: RootJsonFormat[CacheEntry] = jsonFormat2(CacheEntry)
+  implicit val responseMessageFormat: RootJsonFormat[ResponseMessage] = jsonFormat1(ResponseMessage)
+}
+
+object Server extends JsonSupport {
   def main(args: Array[String]): Unit = {
     implicit val system: ActorSystem[Nothing] = ActorSystem(Behaviors.empty, "HttpServer")
     implicit val executionContext = system.executionContext
 
     val route: Route =
-      path("get") {
+      path("cache" / Segment) { key =>
         get {
-          complete(HttpEntity(ContentTypes.`text/plain(UTF-8)`, "This is a GET endpoint"))
+          CacheServiceV3.get(key) match {
+            case Some(value) => complete(CacheEntry(key, value.toString))
+            case None => complete(StatusCodes.NotFound, ResponseMessage("Key not found"))
+          }
         }
       } ~
-        path("put") {
+        path("cache") {
           put {
-            entity(as[String]) { body =>
-              complete(HttpEntity(ContentTypes.`text/plain(UTF-8)`, s"Received PUT request with body: $body"))
+            entity(as[CacheEntry]) { entry =>
+              CacheServiceV3.put(entry.key, entry.value)
+              complete(ResponseMessage(s"Stored key '${entry.key}' with value '${entry.value}'"))
             }
           }
         }

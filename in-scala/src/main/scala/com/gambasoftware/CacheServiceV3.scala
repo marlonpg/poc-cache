@@ -11,7 +11,7 @@ import scala.collection.concurrent.TrieMap
  */
 object CacheServiceV3 {
   private val cache = TrieMap[String, Any]()
-  private var ttl: Long = 13000L
+  private var ttl: Long = 1000000L
   private val scheduler = Executors.newScheduledThreadPool(1)
   private val scheduledTasks = TrieMap[String, ScheduledFuture[_]]()
 
